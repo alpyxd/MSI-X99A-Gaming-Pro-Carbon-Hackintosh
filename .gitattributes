@@ -1,0 +1,11 @@
+* text=auto eol=lf
+EFI/** -text
+*.efi binary
+*.aml binary
+*.zip binary
+*.icns binary
+*.png binary
+*.jpg binary
+*.bin binary
+*.lbl binary
+*.l2x binary
