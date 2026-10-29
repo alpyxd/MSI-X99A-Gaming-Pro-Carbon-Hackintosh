@@ -1,26 +1,18 @@
 # MSI X99A Gaming Pro Carbon (`MS-7A20`) — macOS 15 Sequoia OpenCore EFI & Modified BIOS
 
-![macOS Sequoia](https://img.shields.io/badge/macOS-15%20Sequoia-blue?logo=apple)
+![macOS Sequoia](https://img.shields.io/badge/macOS-15.8.2%20Sequoia-blue?logo=apple)
 ![OpenCore](https://img.shields.io/badge/OpenCore-1.0.4-007ec6)
 ![Motherboard](https://img.shields.io/badge/Motherboard-MSI%20X99A%20Gaming%20Pro%20Carbon%20(MS--7A20)-red)
 ![CPU](https://img.shields.io/badge/CPU-Intel%20Core%20i7--5820K%20(Haswell--E)-0071C5?logo=intel)
-![GPU](https://img.shields.io/badge/GPU-NVIDIA%20GTX%201660%20Super%20%7C%20AMD%20RX%206600-76B900)
+![GPU](https://img.shields.io/badge/GPU-AMD%20Radeon%20RX%20550%204GB%20(Baffin)%20%7C%20GTX%201660%20Super-ED1C24?logo=amd)
 
 Complete OpenCore EFI configuration, modified `1.40` BIOS (`E7A20IMS.140`), and technical root-cause analysis for running **macOS 15 Sequoia** (and Big Sur / Monterey / Ventura / Sonoma) on the **MSI X99A Gaming Pro Carbon (`MS-7A20`)** motherboard.
 
 ---
 
-## 📸 Screenshots
+## 📸 Screenshot
 
-> Place your screenshots inside the [`screenshots/`](./screenshots/) folder using the filenames below (or update the paths in this section):
-
-| About This Mac | Graphics / Metal Acceleration |
-| :---: | :---: |
-| ![About This Mac](screenshots/about-this-mac.png) | ![System Report Graphics](screenshots/graphics.png) |
-
-| USB Port Mapping | PCI / System Overview |
-| :---: | :---: |
-| ![USB Map](screenshots/usb-map.png) | ![System Overview](screenshots/desktop.png) |
+![macOS Sequoia 15.8.2 on MSI X99A Gaming Pro Carbon](screenshots/about-this-mac.png)
 
 ---
 
@@ -31,14 +23,14 @@ Complete OpenCore EFI configuration, modified `1.40` BIOS (`E7A20IMS.140`), and 
 | **Motherboard** | MSI X99A Gaming Pro Carbon (`MS-7A20`) | Intel C610 / X99 Wellsburg PCH |
 | **BIOS Version** | `E7A20IMS.140` (`7A20v14` Modified) | Hidden `HPET = Disabled`, `CFG Lock = Disabled` (see [BIOS section](#-root-cause-1-console-relocated--appleacpicpu-freeze-hidden-bios-hpet-bug)) |
 | **CPU** | Intel Core i7-5820K (6C / 12T @ 3.30 GHz) | Haswell-E (`0x0306F2` spoofed as `0x0306C3`) |
-| **RAM** | 16 GB DDR4 | Quad-Channel DDR4 (XMP Profile 1 enabled) |
-| **GPU** | NVIDIA GeForce GTX 1660 Super (`TU116`) | `10DE:21C4` via [nullmoth/nvidia-macos-driver](https://github.com/nullmoth/nvidia-macos-driver) & [nullmoth/1401](https://github.com/nullmoth/1401) *(Also compatible with AMD RX 6600 / Navi)* |
+| **RAM** | 16 GB DDR4 2133 MHz | Quad-Channel DDR4 |
+| **GPU** | AMD Radeon RX 550 4 GB (`Polaris 21` / `Baffin`, 640 Shaders) | `1002:67FF` (`1002:0B04`) — Native Metal acceleration out of the box *(Also tested with NVIDIA GTX 1660 Super)* |
 | **Storage (NVMe)** | Patriot P300 256 GB M.2 PCIe Gen3 x4 | `126F:2263` (Silicon Motion SM2263XT) |
 | **Storage (SATA)** | Intel X99 6-Port SATA AHCI Controller | `8086:8D02` |
 | **Ethernet** | Intel I218-V Gigabit Ethernet | `8086:15A1` (`IntelMausiEthernet.kext`) |
-| **Audio** | Realtek ALC1150 + NVIDIA HDMI Audio | `10EC:0900` (`AppleALC.kext`, `layout-id = 1`) |
+| **Audio** | Realtek ALC1150 + AMD HDMI/DP Audio | `10EC:0900` (`AppleALC.kext`, `layout-id = 1`) |
 | **USB Controllers** | Intel X99 XHCI (`8086:8D31`), EHC1/EHC2 (`8086:8D26`/`8D2D`), VIA VL805 (`1106:3483`), ASMedia ASM1142 (`1B21:1242`) | Custom USB port map configured for macOS 15 |
-| **SMBIOS** | `MacPro7,1` | macOS 15 Sequoia (`24.6.0`) |
+| **SMBIOS** | `MacPro7,1` | macOS Sequoia 15.8.2 |
 
 ---
 
@@ -150,7 +142,6 @@ By enabling `DevirtualiseMmio = true` and whitelisting **`0xFED1C000` (`42751590
   - `SSDT-USBX.aml` — USB power properties
 - **Kexts (`EFI/OC/Kexts`):**
   - `Lilu.kext` (`v1.7.3`) & `WhateverGreen.kext` (`v1.7.2`)
-  - `AMFIPass.kext` (`v1.4.1`) — Required for `nullmoth/nvidia-macos-driver`
   - `VirtualSMC.kext`, `SMCProcessor.kext`, `SMCSuperIO.kext` (`v1.3.9`)
   - `AppleALC.kext` (`v1.9.9`) — Realtek ALC1150 audio (`layout-id = 1`)
   - `IntelMausiEthernet.kext` (`v3.0.3`) — Intel I218-V Gigabit Ethernet
@@ -164,20 +155,26 @@ By enabling `DevirtualiseMmio = true` and whitelisting **`0xFED1C000` (`42751590
 
 ## 🎮 GPU Configuration
 
-### Option A: NVIDIA Turing / GTX 1660 Super (Default in this EFI)
-This configuration is pre-configured for **[nullmoth/nvidia-macos-driver](https://github.com/nullmoth/nvidia-macos-driver)** and **[nullmoth/1401](https://github.com/nullmoth/1401)** to enable full Metal hardware acceleration on the **NVIDIA GeForce GTX 1660 Super (`TU116`)** in macOS 15 Sequoia:
-- Includes `AMFIPass.kext` and the Turing GSP/KMS boot arguments (`1401.app` will automatically install its `NullMothSafe.efi` helper when setting up the driver):
-  ```text
-  -v debug=0x100 keepsyms=1 npci=0x2000 nvfb=1 nvaccel=1 nvfbheads=4 -nvkmsnosmooth amfi_get_out_of_my_way=0x1 amfi=0x80 ipc_control_port_options=0 gfxrst=4 nvrmsettle=10000
-  ```
+### Option A: AMD Radeon RX 550 4GB (`Polaris 21` / `Baffin`, 640 Shaders — Default in this EFI)
+The included `EFI/` is pre-configured for the **AMD Radeon RX 550 4GB (Baffin core, Device ID `1002:67FF`)**, which has 100% native Metal acceleration in macOS 15 Sequoia with SIP enabled (`csr-active-config = 00000000`) and clean boot arguments:
+```text
+-v debug=0x100 keepsyms=1 npci=0x2000
+```
 
 ### Option B: AMD Radeon RX 6600 / RX 6600 XT (Native Navi 23)
-If using an AMD Radeon RX 6600 / 6600 XT instead of an NVIDIA Turing card:
-1. Replace the NVIDIA `boot-args` with:
+If using an AMD Radeon RX 6600 / 6600 XT (`Navi 23`), simply append `agdpmod=pikera` to `boot-args`:
+```text
+-v debug=0x100 keepsyms=1 npci=0x2000 agdpmod=pikera
+```
+
+### Option C: NVIDIA Turing / GTX 1660 Super (`nullmoth/nvidia-macos-driver`)
+If using an **NVIDIA GeForce GTX 1660 Super (`TU116`, `10DE:21C4`)** via **[nullmoth/nvidia-macos-driver](https://github.com/nullmoth/nvidia-macos-driver)** and **[nullmoth/1401](https://github.com/nullmoth/1401)**:
+1. Add `AMFIPass.kext` (`v1.4.1`) to `EFI/OC/Kexts` and `Kernel -> Add`.
+2. Block `com.apple.iokit.IONDRVSupport` under `Kernel -> Block` (`Strategy = Exclude`).
+3. Set `csr-active-config = 430A0000` (`QwoAAA==`) and use the Turing GSP/KMS `boot-args`:
    ```text
-   -v debug=0x100 keepsyms=1 npci=0x2000 agdpmod=pikera
+   -v debug=0x100 keepsyms=1 npci=0x2000 nvfb=1 nvaccel=1 nvfbheads=4 -nvkmsnosmooth amfi_get_out_of_my_way=0x1 amfi=0x80 ipc_control_port_options=0 gfxrst=4 nvrmsettle=10000
    ```
-2. Disable `AMFIPass.kext` in `Kernel -> Add` if not required.
 
 ---
 
