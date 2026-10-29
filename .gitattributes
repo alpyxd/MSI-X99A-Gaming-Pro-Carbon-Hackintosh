@@ -1,5 +1,6 @@
 * text=auto eol=lf
-EFI/** -text
+EFI-RX550/** -text
+EFI-GTX1660Super/** -text
 *.efi binary
 *.aml binary
 *.zip binary

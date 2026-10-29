@@ -131,16 +131,24 @@ By enabling `DevirtualiseMmio = true` and whitelisting **`0xFED1C000` (`42751590
 
 ---
 
-## 📦 Included EFI Overview (`EFI/OC`)
+## 📦 Included EFI Folders
 
-- **ACPI (`EFI/OC/ACPI`):**
+This repository provides **two separate, ready-to-use OpenCore 1.0.4 EFI folders** depending on your GPU:
+
+| Folder | Target GPU | Details |
+| :--- | :--- | :--- |
+| **[`EFI-RX550/EFI`](./EFI-RX550/EFI)** | **AMD Radeon RX 550 4 GB (`Polaris 21` / `Baffin`, 640 Shaders)** | 100% native Metal acceleration out of the box (`1002:67FF`), SIP enabled (`csr-active-config = 00000000`), zero NVIDIA patches/boot-args. |
+| **[`EFI-GTX1660Super/EFI`](./EFI-GTX1660Super/EFI)** | **NVIDIA GeForce GTX 1660 Super (`TU116`)** | Pre-configured for [`nullmoth/nvidia-macos-driver`](https://github.com/nullmoth/nvidia-macos-driver) & [`nullmoth/1401`](https://github.com/nullmoth/1401) with `AMFIPass.kext`, `IONDRVSupport` block, and Turing GSP/KMS `boot-args`. |
+
+### Common Components (`OC/ACPI`, `OC/Kexts`, `OC/Drivers`)
+- **ACPI (`OC/ACPI`):**
   - `SSDT-EC.aml` — Fake Embedded Controller
   - `SSDT-PLUG.aml` — XCPM CPU Power Management (`PR00`)
   - `SSDT-RTC0-RANGE.aml` — X99 RTC memory range fix
   - `SSDT-SBUS.aml` — System Management Bus
   - `SSDT-UNC.aml` — Disables unused X99 Uncore (`UNC0`) bridges
   - `SSDT-USBX.aml` — USB power properties
-- **Kexts (`EFI/OC/Kexts`):**
+- **Kexts (`OC/Kexts`):**
   - `Lilu.kext` (`v1.7.3`) & `WhateverGreen.kext` (`v1.7.2`)
   - `VirtualSMC.kext`, `SMCProcessor.kext`, `SMCSuperIO.kext` (`v1.3.9`)
   - `AppleALC.kext` (`v1.9.9`) — Realtek ALC1150 audio (`layout-id = 1`)
@@ -148,39 +156,32 @@ By enabling `DevirtualiseMmio = true` and whitelisting **`0xFED1C000` (`42751590
   - `CpuTscSync.kext` (`v1.1.3`) — X99 TSC synchronization
   - `NVMeFix.kext` (`v1.1.4`) & `RestrictEvents.kext` (`v1.1.7`)
   - `USBToolBox.kext` (`v1.2.0`), `UTBDefault.kext` (`v1.0`), `XHCI-unsupported.kext` (`v0.9.2`)
-- **Drivers (`EFI/OC/Drivers`):**
+  - `AMFIPass.kext` (`v1.4.1`) — *(Included in `EFI-GTX1660Super/EFI` only)*
+- **Drivers (`OC/Drivers`):**
   - `OpenRuntime.efi`, `HfsPlus.efi`, `ResetNvramEntry.efi`
 
 ---
 
 ## 🎮 GPU Configuration
 
-### Option A: AMD Radeon RX 550 4GB (`Polaris 21` / `Baffin`, 640 Shaders — Default in this EFI)
-The included `EFI/` is pre-configured for the **AMD Radeon RX 550 4GB (Baffin core, Device ID `1002:67FF`)**, which has 100% native Metal acceleration in macOS 15 Sequoia with SIP enabled (`csr-active-config = 00000000`) and clean boot arguments:
+### Option A: AMD Radeon RX 550 4GB (`Polaris 21` / `Baffin`, 640 Shaders) — [`EFI-RX550/EFI`](./EFI-RX550/EFI)
+Copy the `EFI` folder inside [`EFI-RX550/`](./EFI-RX550/) to your EFI partition. It provides 100% native Metal acceleration in macOS 15 Sequoia with SIP enabled (`csr-active-config = 00000000`) and clean boot arguments:
 ```text
 -v debug=0x100 keepsyms=1 npci=0x2000
 ```
+*(If using an AMD Radeon RX 6600 / RX 6600 XT Navi 23 card with `EFI-RX550/EFI`, simply append `agdpmod=pikera` to `boot-args`.)*
 
-### Option B: AMD Radeon RX 6600 / RX 6600 XT (Native Navi 23)
-If using an AMD Radeon RX 6600 / 6600 XT (`Navi 23`), simply append `agdpmod=pikera` to `boot-args`:
+### Option B: NVIDIA Turing / GTX 1660 Super (`TU116`) — [`EFI-GTX1660Super/EFI`](./EFI-GTX1660Super/EFI)
+Copy the `EFI` folder inside [`EFI-GTX1660Super/`](./EFI-GTX1660Super/) to your EFI partition. It is pre-configured for **[nullmoth/nvidia-macos-driver](https://github.com/nullmoth/nvidia-macos-driver)** and **[nullmoth/1401](https://github.com/nullmoth/1401)** (`1401.app` will automatically install its `NullMothSafe.efi` helper when setting up the driver):
 ```text
--v debug=0x100 keepsyms=1 npci=0x2000 agdpmod=pikera
+-v debug=0x100 keepsyms=1 npci=0x2000 nvfb=1 nvaccel=1 nvfbheads=4 -nvkmsnosmooth amfi_get_out_of_my_way=0x1 amfi=0x80 ipc_control_port_options=0 gfxrst=4 nvrmsettle=10000
 ```
-
-### Option C: NVIDIA Turing / GTX 1660 Super (`nullmoth/nvidia-macos-driver`)
-If using an **NVIDIA GeForce GTX 1660 Super (`TU116`, `10DE:21C4`)** via **[nullmoth/nvidia-macos-driver](https://github.com/nullmoth/nvidia-macos-driver)** and **[nullmoth/1401](https://github.com/nullmoth/1401)**:
-1. Add `AMFIPass.kext` (`v1.4.1`) to `EFI/OC/Kexts` and `Kernel -> Add`.
-2. Block `com.apple.iokit.IONDRVSupport` under `Kernel -> Block` (`Strategy = Exclude`).
-3. Set `csr-active-config = 430A0000` (`QwoAAA==`) and use the Turing GSP/KMS `boot-args`:
-   ```text
-   -v debug=0x100 keepsyms=1 npci=0x2000 nvfb=1 nvaccel=1 nvfbheads=4 -nvkmsnosmooth amfi_get_out_of_my_way=0x1 amfi=0x80 ipc_control_port_options=0 gfxrst=4 nvrmsettle=10000
-   ```
 
 ---
 
 ## ⚠️ Before You Boot: Generate Your Own SMBIOS Serials
 
-For privacy and iMessage/Apple ID safety, the serial numbers in [`EFI/OC/config.plist`](./EFI/OC/config.plist) have been replaced with dummy placeholders:
+For privacy and iMessage/Apple ID safety, the serial numbers in both [`EFI-RX550/EFI/OC/config.plist`](./EFI-RX550/EFI/OC/config.plist) and [`EFI-GTX1660Super/EFI/OC/config.plist`](./EFI-GTX1660Super/EFI/OC/config.plist) have been replaced with dummy placeholders:
 - `PlatformInfo -> Generic -> MLB`: `M0000000000000001`
 - `PlatformInfo -> Generic -> SystemSerialNumber`: `W00000000001`
 - `PlatformInfo -> Generic -> SystemUUID`: `00000000-0000-0000-0000-000000000000`
